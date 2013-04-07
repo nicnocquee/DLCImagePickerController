@@ -368,7 +368,7 @@
     [self removeAllTargets];
     
     staticPicture = [[GPUImagePicture alloc] initWithImage:img
-                                       smoothlyScaleOutput:YES];
+                                       smoothlyScaleOutput:NO];
     
     staticPictureOriginalOrientation = img.imageOrientation;
     
@@ -408,7 +408,7 @@
         UIImage *currentFilteredVideoFrame = [processUpTo imageFromCurrentlyProcessedOutputWithOrientation:staticPictureOriginalOrientation];
 
         NSDictionary *info = [[NSDictionary alloc] initWithObjectsAndKeys:
-                              UIImageJPEGRepresentation(currentFilteredVideoFrame, self.outputJPEGQuality), @"data", nil];
+                              UIImagePNGRepresentation(currentFilteredVideoFrame), @"data", nil];
         [self.delegate imagePickerController:self didFinishPickingMediaWithInfo:info];
     }
 }
@@ -663,7 +663,7 @@
     }
     
     if (outputImage) {
-        staticPicture = [[GPUImagePicture alloc] initWithImage:outputImage smoothlyScaleOutput:YES];
+        staticPicture = [[GPUImagePicture alloc] initWithImage:outputImage smoothlyScaleOutput:NO];
         staticPictureOriginalOrientation = outputImage.imageOrientation;
         isStatic = YES;
         [self dismissViewControllerAnimated:YES completion:nil];
