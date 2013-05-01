@@ -10,11 +10,13 @@
 #import "GrayscaleContrastFilter.h"
 
 #define kStaticBlurSize 2.0f
+#define IS_IPAD [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad
 
 @implementation DLCImagePickerController {
     BOOL isStatic;
     BOOL hasBlur;
     int selectedFilter;
+    UIPopoverController *popOver;
 }
 
 @synthesize delegate,
@@ -299,7 +301,14 @@
     imagePickerController.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     imagePickerController.delegate = self;
     imagePickerController.allowsEditing = YES;
-    [self presentViewController:imagePickerController animated:YES completion:NULL];
+    if (!IS_IPAD) [self presentViewController:imagePickerController animated:YES completion:NULL];
+    else {
+        imagePickerController.allowsEditing = NO;
+        CGRect rect = [self.photoBar convertRect:self.libraryToggleButton.frame toView:self.view];
+        popOver = [[UIPopoverController alloc] initWithContentViewController:imagePickerController];
+        [popOver setPopoverContentSize:CGSizeMake(640, 640)];
+        [popOver presentPopoverFromRect:rect inView:self.view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+    }
 }
 
 -(IBAction)toggleFlash:(UIButton *)button{
@@ -666,7 +675,11 @@
         staticPicture = [[GPUImagePicture alloc] initWithImage:outputImage smoothlyScaleOutput:NO];
         staticPictureOriginalOrientation = outputImage.imageOrientation;
         isStatic = YES;
-        [self dismissViewControllerAnimated:YES completion:nil];
+        if (!IS_IPAD) {
+            [self dismissViewControllerAnimated:YES completion:nil];
+        } else {
+            [popOver dismissPopoverAnimated:YES];
+        }
         [self.cameraToggleButton setEnabled:NO];
         [self.flashToggleButton setEnabled:NO];
         [self prepareStaticFilter];
