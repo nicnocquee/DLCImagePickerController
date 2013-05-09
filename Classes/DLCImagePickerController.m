@@ -79,9 +79,6 @@
     
     [self loadFilters];
     
-    //we need a crop filter for the live video
-    cropFilter = [[GPUImageCropFilter alloc] initWithCropRegion:CGRectMake(0.0f, 0.0f, 1.0f, 0.75f)];
-    
     filter = [[GPUImageFilter alloc] init];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
@@ -221,8 +218,7 @@
 
 -(void) prepareLiveFilter {
     
-    [stillCamera addTarget:cropFilter];
-    [cropFilter addTarget:filter];
+    [stillCamera addTarget:filter];
     //blur is terminal filter
     if (hasBlur) {
         [filter addTarget:blurFilter];
@@ -280,7 +276,6 @@
 -(void) removeAllTargets {
     [stillCamera removeAllTargets];
     [staticPicture removeAllTargets];
-    [cropFilter removeAllTargets];
     
     //regular filter
     [filter removeAllTargets];
@@ -371,24 +366,24 @@
 
 
 -(void)captureImage {
-    UIImage *img = [cropFilter imageFromCurrentlyProcessedOutput];
-    [stillCamera.inputCamera unlockForConfiguration];
-    [stillCamera stopCameraCapture];
-    [self removeAllTargets];
-    
-    staticPicture = [[GPUImagePicture alloc] initWithImage:img
-                                       smoothlyScaleOutput:NO];
-    
-    staticPictureOriginalOrientation = img.imageOrientation;
-    
-    [self prepareFilter];
-    [self.retakeButton setHidden:NO];
-    [self.photoCaptureButton setTitle:@"Done" forState:UIControlStateNormal];
-    [self.photoCaptureButton setImage:nil forState:UIControlStateNormal];
-    [self.photoCaptureButton setEnabled:YES];
-    if(![self.filtersToggleButton isSelected]){
-        [self showFilters];
-    }
+    [stillCamera capturePhotoAsImageProcessedUpToFilter:filter withCompletionHandler:^(UIImage *processedImage, NSError *error) {
+        [stillCamera.inputCamera unlockForConfiguration];
+        [stillCamera stopCameraCapture];
+        [self removeAllTargets];
+        staticPicture = [[GPUImagePicture alloc] initWithImage:processedImage
+                                           smoothlyScaleOutput:NO];
+        
+        staticPictureOriginalOrientation = processedImage.imageOrientation;
+        
+        [self prepareFilter];
+        [self.retakeButton setHidden:NO];
+        [self.photoCaptureButton setTitle:@"Done" forState:UIControlStateNormal];
+        [self.photoCaptureButton setImage:nil forState:UIControlStateNormal];
+        [self.photoCaptureButton setEnabled:YES];
+        if(![self.filtersToggleButton isSelected]){
+            [self showFilters];
+        }
+    }];    
 }
 
 -(IBAction) takePhoto:(id)sender{
@@ -417,7 +412,7 @@
         UIImage *currentFilteredVideoFrame = [processUpTo imageFromCurrentlyProcessedOutputWithOrientation:staticPictureOriginalOrientation];
 
         NSDictionary *info = [[NSDictionary alloc] initWithObjectsAndKeys:
-                              currentFilteredVideoFrame, @"data", nil];
+                              currentFilteredVideoFrame, @"image", nil];
         [self.delegate imagePickerController:self didFinishPickingMediaWithInfo:info];
     }
 }
@@ -569,7 +564,7 @@
     self.filtersBackgroundImageView.hidden = NO;
     [UIView animateWithDuration:0.10
                           delay:0.05
-                        options: UIViewAnimationCurveEaseOut
+                        options: UIViewAnimationOptionCurveEaseOut
                      animations:^{
                          self.imageView.frame = imageRect;
                          self.filterScrollView.frame = sliderScrollFrame;
@@ -592,7 +587,7 @@
     
     [UIView animateWithDuration:0.10
                           delay:0.05
-                        options: UIViewAnimationCurveEaseOut
+                        options: UIViewAnimationOptionCurveEaseOut
                      animations:^{
                          self.imageView.frame = imageRect;
                          self.filterScrollView.frame = sliderScrollFrame;
@@ -648,7 +643,6 @@
 -(void) dealloc {
     [self removeAllTargets];
     stillCamera = nil;
-    cropFilter = nil;
     filter = nil;
     blurFilter = nil;
     staticPicture = nil;

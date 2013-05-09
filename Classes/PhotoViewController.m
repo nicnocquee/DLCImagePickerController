@@ -46,27 +46,28 @@
 -(void) takePhoto:(id)sender{
     DLCImagePickerController *picker = [[DLCImagePickerController alloc] init];
     picker.delegate = self;
-    [self presentModalViewController:picker animated:YES];
+    [self presentViewController:picker animated:YES completion:nil];
 }
 
 
 -(void) imagePickerControllerDidCancel:(DLCImagePickerController *)picker{
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 -(void) imagePickerController:(DLCImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
     [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:NO];
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
     
     if (info) {
         ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-        [library writeImageDataToSavedPhotosAlbum:[info objectForKey:@"data"] metadata:nil completionBlock:^(NSURL *assetURL, NSError *error)
+        [library writeImageDataToSavedPhotosAlbum:UIImageJPEGRepresentation([info objectForKey:@"image"], 1.0) metadata:nil completionBlock:^(NSURL *assetURL, NSError *error)
          {
              if (error) {
-                 NSLog(@"ERROR: the image failed to be written");
+                 NSLog(@"ERROR: the image failed to be written: %@", error);
              }
              else {
-                 NSLog(@"PHOTO SAVED - assetURL: %@", assetURL);
+                 UIImage *im = [info objectForKey:@"image"];
+                 NSLog(@"PHOTO SAVED - assetURL: %@. Image size: %@", assetURL, NSStringFromCGSize(im.size));
              }
          }];
     }
