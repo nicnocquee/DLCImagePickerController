@@ -68,7 +68,7 @@
 	[self.view addSubview:self.focusView];
 	self.focusView.alpha = 0;
     
-    
+    [self.imageView setFillMode:kGPUImageFillModePreserveAspectRatioAndFill];
     self.blurOverlayView = [[BlurOverlayView alloc] initWithFrame:CGRectMake(0, 0,
                                                                          self.imageView.frame.size.width,
                                                                          self.imageView.frame.size.height)];
